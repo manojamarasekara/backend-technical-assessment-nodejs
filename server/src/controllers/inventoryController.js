@@ -3,80 +3,129 @@ const Medication = require('../models/medicationModel');
 const getMedications = async (req, res) => {
     try {
         const medications = await Medication.findAll();
+
+        const medicationData = medications.map(medication => {
+            return {
+              id: medication.id,
+              name: medication.name,
+              description: medication.description,
+              quantity: medication.quantity
+            };
+          });
  
-        res.json({ medications });
+        res.status(200).json({
+            success: true,
+            message: "Successfully retrieved medication data",
+            data: medicationData
+          });
     } catch (error) {
         console.error('Error querying medicines:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+         });
     }
 };
 
 const addMedication = async (req, res) => {
     try {
-        // Extract medication data from request body
         const { name, description, quantity } = req.body;
 
-        // Create new medication record
         const medication = await Medication.create({ name, description, quantity });
 
-        // Return success message and created medication record to client
-        res.status(201).json({ message: 'Medication created successfully', medication });
+        res.status(201).json({ 
+            success: true,
+            message: 'Medication created successfully', 
+            data: {
+                name: medication.name,
+                description: medication.description,
+                quantity: medication.quantity
+            }
+        });
     } catch (error) {
         console.error('Error creating medication:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Error creating medication',
+            message: error.message
+        });
     }
 };
 
 const getMedicationById = async (req, res) => {
     try {
-        // Extract medication ID from request parameters
         const { medication_id } = req.params;
 
-        // Find medication by ID
         const medication = await Medication.findByPk(medication_id);
 
-        // Check if medication exists
         if (!medication) {
-            return res.status(404).json({ error: 'Medication not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Medication not found',
+                message: "The medication you are trying to access does not exist in the system. Please make sure you have provided the correct medication ID."
+            });
         }
 
         // Return medication details to client
-        res.json({ medication });
+        res.status(200).json({
+            success: true,
+            message: 'Medication details available',
+            data: {
+                name: medication.name,
+                description: medication.description,
+                quantity: medication.quantity
+            }
+        });
     } catch (error) {
         console.error('Error retrieving medication:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 };
 
 const updateMedication = async (req, res) => {
     try {
-        // Extract medication ID from request parameters
         const { medication_id } = req.params;
 
-        // Extract updated medication details from request body
         const { name, description, quantity } = req.body;
 
-        // Find medication by ID
         let medication = await Medication.findByPk(medication_id);
 
-        // Check if medication exists
         if (!medication) {
-            return res.status(404).json({ error: 'Medication not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Medication not found',
+                message: "The medication you are trying to access does not exist in the system. Please make sure you have provided the correct medication ID."
+            });
         }
 
-        // Update medication details
         medication.name = name;
         medication.description = description;
         medication.quantity = quantity;
 
-        // Save updated medication to the database
         medication = await medication.save();
 
         // Return success message and updated medication to client
-        res.json({ message: 'Medication updated successfully', medication });
+        res.json({ 
+            success: true,
+            message: 'Medication updated successfully', 
+            data: {
+                name: medication.name,
+                description: medication.description,
+                quantity: medication.quantity
+            }
+        });
     } catch (error) {
         console.error('Error updating medication:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 };
 
@@ -104,61 +153,85 @@ const softDeleteMedication = async (req, res) => {
         res.json({ message: 'Medication soft deleted successfully' });
     } catch (error) {
         console.error('Error soft deleting medication:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 };
 
 const deleteMedication = async (req, res) => {
     try {
-        // Extract medication ID from request parameters
         const { medication_id } = req.params;
 
-        // Find medication by ID
         const medication = await Medication.findByPk(medication_id);
 
-        // Check if medication exists
         if (!medication) {
-            return res.status(404).json({ error: 'Medication not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Medication not found',
+                message: "The medication you are trying to access does not exist in the system. Please make sure you have provided the correct medication ID."
+            });
         }
 
-        // Permanently delete medication
         await medication.destroy();
 
-        // Return success message
-        res.json({ message: 'Medication permanently deleted successfully' });
+        res.json({ 
+            success: true,
+            message: 'Medication permanently deleted',
+            data: {
+                name: medication.name,
+                description: medication.description,
+                quantity: medication.quantity
+            }
+        });
     } catch (error) {
         console.error('Error deleting medication:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 };
 
 const adjustMedicationQuantity = async (req, res) => {
     try {
-        // Extract medication ID from request parameters
         const { medication_id } = req.params;
 
-        // Extract quantity adjustment from request body
         const { adjustment } = req.body;
 
-        // Find medication by ID
         let medication = await Medication.findByPk(medication_id);
 
-        // Check if medication exists
         if (!medication) {
-            return res.status(404).json({ error: 'Medication not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Medication not found',
+                message: "The medication you are trying to access does not exist in the system. Please make sure you have provided the correct medication ID."
+            });
         }
 
-        // Adjust medication quantity
         medication.quantity = adjustment;
 
-        // Save updated medication to the database
         await medication.save();
 
-        // Return success message and updated medication to client
-        res.json({ message: 'Medication quantity adjusted successfully', medication });
+        res.json({ 
+            success: true,
+            message: 'Medication quantity adjusted successfully',
+            data: {
+                name: medication.name,
+                description: medication.description,
+                quantity: medication.quantity
+            }
+        });
     } catch (error) {
         console.error('Error adjusting medication quantity:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 };
 

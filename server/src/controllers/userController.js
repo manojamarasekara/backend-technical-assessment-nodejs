@@ -8,10 +8,28 @@ const saltRounds = 10;
 const getAllUsers = async (req, res) => {
   try {
       const users = await User.findAll();
-      res.json(users);
+
+      const usersData = users.map(user => {
+        return {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          role: user.role
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Successfully retrieved user data",
+        data: usersData
+      });
   } catch (error) {
-      console.error('Error fetching users:', error);
-      res.status(500).json({ error: 'Error fetching users' });
+      console.error('Error querying users:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error',
+        message: error.message
+      });
   }
 };
 
@@ -23,12 +41,18 @@ const addUser = async (req, res) => {
         if (err) {
             console.error('Error hashing password:', err);
             // Handle error
+            res.status(400).json({ 
+              success: false,
+              error: 'Error creating user',
+              message: err.message
+            });
         } else {
             // Store the hashed password in the database
             User.create({ name, username, password: hash, role })
                 .then(user => {
                     // User created successfully
                     res.status(201).json({ 
+                      success: true,
                       message: 'User created successfully',
                       data: { 
                         name: user.name, 
@@ -40,6 +64,7 @@ const addUser = async (req, res) => {
                 .catch(error => {
                     console.error('Error creating user:', error);
                     res.status(400).json({ 
+                      success: false,
                       type: error.original.code,
                       message: error.original.sqlMessage,
                      });
@@ -48,7 +73,11 @@ const addUser = async (req, res) => {
     });
   } catch (error) {
       console.error('Error creating user:', error);
-      res.status(500).json({ error: 'Error creating user' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Error creating user',
+        message: error.message
+      });
   }
 };
 
@@ -59,57 +88,132 @@ const updateUser = async (req, res) => {
 
       const user = await User.findByPk(id);
       if (!user) {
-          return res.status(404).json({ error: 'User not found' });
+          return res.status(404).json({
+            success: false,
+            error: 'User not found',
+            message: 'The user you are trying to access does not exist in the system. Please make sure you have provided the correct user ID.'
+          });
       }
 
       await user.update({ name, username, password, role });
-
-      res.json(user);
+      
+      res.status(200).json({
+        success: true,
+        message: 'User details successfully updated.',
+        data: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          role: user.role
+        }
+      });
   } catch (error) {
       console.error('Error updating user:', error);
-      res.status(500).json({ error: 'Error updating user' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Error updating user',
+        message: error.message
+      });
   }
 };
 
 const softDeleteUser = async (req, res) => {
   try {
       const { id } = req.params;
+      console.log(id);
 
       const user = await User.findByPk(id);
       if (!user) {
-          return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          message: 'The user you are trying to access does not exist in the system. Please make sure you have provided the correct user ID.'
+        });
       }
 
       const deletedAt = new Date();
       await user.update({ deletedAt }).then((result) => {
-        res.json({ message: 'User soft deleted successfully' });
+        res.status(200).json({ 
+          success: true,
+          message: 'User has been successfully marked as deleted. This action soft deletes the user from the system.'
+        });
       });
 
       
   } catch (error) {
       console.error('Error soft deleting user:', error);
-      res.status(500).json({ error: 'Error soft deleting user' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Error soft deleting user',
+        message: error.message
+      });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      const user = await User.findByPk(id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          message: 'The user you are trying to access does not exist in the system. Please make sure you have provided the correct user ID.'
+        });
+      }
+
+      await user.destroy();
+
+      res.json({ 
+        success: true,
+        message: 'User permanently deleted',
+        data: {
+          data: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            role: user.role
+          }
+        }
+      });
+  } catch (error) {
+      console.error('Error permanently deleting user:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error permanently deleting user',
+        message: error.message
+      });
   }
 };
 
 const getUserRole = async (req, res) => {
   try {
       const { user_id } = req.params;
-      console.log(user_id);
 
-      // Find the user by ID
       const user = await User.findByPk(user_id);
       if (!user) {
-          return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          message: 'The user you are trying to access does not exist in the system. Please make sure you have provided the correct user ID.'
+        });
       }
 
-      // Extract the role of the user
       const { role } = user;
 
-      res.json({ role });
+      res.status(200).json({ 
+        success: true,
+        message: `User role found for user ${user.name} in system`,
+        data: { role }
+      });
   } catch (error) {
       console.error('Error retrieving user role:', error);
-      res.status(500).json({ error: 'Error retrieving user role' });
+      res.status(500).json({ 
+        success: true,
+        error: 'Error retrieving user role',
+        message: error.message
+      });
   }
 };
 
@@ -118,19 +222,34 @@ const updateUserRole = async (req, res) => {
       const { user_id } = req.params;
       const { role } = req.body;
 
-      // Find the user by ID
       const user = await User.findByPk(user_id);
       if (!user) {
-          return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          message: 'The user you are trying to access does not exist in the system. Please make sure you have provided the correct user ID.'
+        });
       }
 
-      // Update the role of the user
       await user.update({ role });
 
-      res.json({ message: 'User role updated successfully' });
+      res.status(200).json({
+        success: true,
+        message: 'User role updated successfully',
+        data:{
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          role: user.role
+        }
+      });
   } catch (error) {
       console.error('Error updating user role:', error);
-      res.status(500).json({ error: 'Error updating user role' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Error updating user role',
+        message: error.message
+      });
   }
 };
 
@@ -139,6 +258,7 @@ module.exports = {
   addUser,
   updateUser,
   softDeleteUser,
+  deleteUser,
   getUserRole,
   updateUserRole
 };

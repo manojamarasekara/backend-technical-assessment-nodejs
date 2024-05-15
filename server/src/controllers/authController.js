@@ -10,6 +10,7 @@ const login = async (req, res) => {
             return user;
           } else {
             return res.status(401).json({ 
+              success: false,
               error: 'User not found',
               message: 'User authentication failed. Cannot find user.'
             });
@@ -17,8 +18,10 @@ const login = async (req, res) => {
         });
         
         const passwordMatch = await bcrypt.compare(password, user.password);
+
         if (!passwordMatch) {
             return res.status(401).json({
+              success: false,
               error: 'Invalid password',
               message: 'User authentication failed. Provided credentials are incorrect.'
             });
@@ -27,15 +30,19 @@ const login = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        // Return token to client
         res.status(200).json({
+          success: true,
           message: 'Authentication success',
-          token 
+          data: {token} 
         });
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ 
+          success: false,
+          error: 'Internal server error',
+          message: error.message
+        });
     }
 };
 

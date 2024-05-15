@@ -4,11 +4,11 @@ const { requireRole } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.get('/', requireRole(['owner', 'manager', 'cashier']), customerController.getAllCustomers);
-router.post('/', requireRole(['owner']), customerController.createCustomer);
-router.get('/:customer_id', requireRole(['owner', 'manager', 'cashier']), customerController.getCustomerById);
-router.put('/:customer_id', requireRole(['owner', 'manager', 'cashier']), customerController.updateCustomer);
-router.patch('/:customer_id', requireRole(['owner', 'manager']), customerController.softDeleteCustomer);
-router.delete('/:customer_id', requireRole(['owner']), customerController.deleteCustomer);
+router.get('/', requireRole(['Owner', 'Manager', 'Cashier']), customerController.getAllCustomers);
+router.post('/', requireRole(['Owner']), customerController.createCustomer);
+router.get('/:customer_id', requireRole(['Owner', 'Manager', 'Cashier']), customerController.getCustomerById);
+router.put('/:customer_id', requireRole(['Owner', 'Manager', 'Cashier']), customerController.updateCustomer);
+router.patch('/:customer_id', requireRole(['Owner', 'Manager']), customerController.softDeleteCustomer);
+router.delete('/:customer_id', requireRole(['Owner']), customerController.deleteCustomer);
 
 module.exports = router;
