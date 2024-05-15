@@ -82,7 +82,6 @@ const softDeleteUser = async (req, res) => {
 
       const deletedAt = new Date();
       await user.update({ deletedAt }).then((result) => {
-        // console.log(result);
         res.json({ message: 'User soft deleted successfully' });
       });
 
