@@ -11,7 +11,6 @@ const customerRoutes  = require('./src/routes/customerRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(bodyParser.json());
 
 /**
@@ -26,13 +25,11 @@ app.use(bodyParser.json());
 //   }
 // });
 
-// user routes
 app.use('/api/users', userRoutes);
 app.use('/api/login', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use("/api/customers", customerRoutes);
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
